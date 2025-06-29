@@ -6,7 +6,7 @@ export default function SplashScreen({ navigation }) {
     useEffect(() => {
       setTimeout(() => {
         navigation.replace('Auth');
-      }, 2000); // 2 segundos
+      }, 2000); 
     }, []);
 
     return (
