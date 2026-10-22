@@ -1,43 +1,40 @@
+import Feather from '@expo/vector-icons/Feather';
 import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+import FloatingTabBar from '../../components/FloatingTabBar';
+import { colors } from '../../lib/theme';
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+// Barra de abajo como en el Figma de OQUA: Calendario, Inicio y Cámara. La app abre en Inicio.
+export default function TabsLayout() {
   return (
     <Tabs
+      tabBar={(props) => <FloatingTabBar {...props} />}
+      initialRouteName="index"
+      // Mantiene las pestañas montadas (en Coatrack, desconectarlas a veces dejaba una en blanco).
+      detachInactiveScreens={false}
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
+        sceneStyle: { backgroundColor: colors.ink },
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="calendario"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Calendario',
+          tabBarIcon: ({ color, size }) => <Feather name="calendar" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="index"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Inicio',
+          tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="camara"
+        options={{
+          title: 'Cámara',
+          tabBarIcon: ({ color, size }) => <Feather name="camera" size={size} color={color} />,
         }}
       />
     </Tabs>
