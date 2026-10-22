@@ -65,7 +65,7 @@ App personal para **contar calorías y gramos (proteína, carbohidratos, grasa) 
 3. App: `cd ~/Desktop/Proyectos/OQUA && npx expo start --lan` (Expo Go, misma wifi). La URL de la API se detecta sola (`lib/api.ts`).
 
 ## ▶️ RETOMAR AQUÍ (2026-10-22)
-**Hecho hoy (sin commit):** código pasado al repo OQUA; nombre OQUA y azul en toda la app (al usuario le encantó la pantalla Hoy en azul); bienvenida con mascota probada y revertida (no le gustó). **Siguiente:** proponer el siguiente cambio pequeño (p. ej. login/registro o el Home con tarjetas), luego ícono y pantalla de carga, luego paso 2 del plan (Home con tarjetas y barra inferior).
+**Hecho hoy (commit `0adff44` en GitHub, main):** código pasado al repo OQUA; nombre OQUA y azul en toda la app (al usuario le encantó la pantalla Hoy en azul); bienvenida con mascota probada y revertida (no le gustó). **Siguiente:** proponer el siguiente cambio pequeño (p. ej. login/registro o el Home con tarjetas), luego ícono y pantalla de carga, luego paso 2 del plan (Home con tarjetas y barra inferior).
 
 ## Estado anterior (2026-10-21)
 **Estado:** paso 1 hecho. Backend de Nutri **ya en GitHub y desplegado en Render** (el usuario hizo commit y push el 2026-10-21: `e544242`, junto con cambios de Coatrack). **008 aplicado en la base local** (2026-10-21, lo corrió Claude a pedido del usuario con un script node que carga el `.env` sin mostrarlo y aborta si el host no es local). **008 todavía pendiente en Supabase** → hasta correrlo, las rutas `/nutricion` fallan en internet (Coatrack no se afecta). (Desde 2026-10-22 la app vive en el repo OQUA.)
