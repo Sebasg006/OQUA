@@ -1,10 +1,13 @@
 import Feather from '@expo/vector-icons/Feather';
+import { useFocusEffect } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Glow from '../../components/Glow';
 import HeaderEyebrow from '../../components/HeaderEyebrow';
 import ProgressRing from '../../components/ProgressRing';
 import WaterCard from '../../components/WaterCard';
+import MunecoView from '../../components/MunecoView';
+import { useMuneco } from '../../lib/muneco';
 import { useTabBarClearance } from '../../components/FloatingTabBar';
 import { useAuth } from '../../lib/authContext';
 import { ACTIVIDAD, meta } from '../../lib/calorias';
@@ -19,6 +22,8 @@ const RING = 220;
 export default function HoyScreen() {
   const { session, profile } = useAuth();
   const tabBarClearance = useTabBarClearance();
+  const { muneco, saved: munecoSaved, loaded: munecoLoaded, reload: reloadMuneco } = useMuneco(session?.id);
+  useFocusEffect(reloadMuneco);
   if (!profile) return null;
   const m = meta(profile);
   const eaten = { kcal: 0, proteina: 0, carbos: 0, grasa: 0 };
@@ -33,6 +38,21 @@ export default function HoyScreen() {
         <Text style={shared.title}>
           Hola, <Text style={{ color: colors.accent }}>{firstName}</Text>
         </Text>
+
+        {munecoLoaded && !munecoSaved && (
+          <Pressable
+            style={({ pressed }) => [styles.munecoCard, pressed && { opacity: 0.85 }]}
+            onPress={() => router.push('/muneco')}
+            accessibilityRole="button"
+          >
+            <MunecoView muneco={muneco} size={56} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.munecoTitle}>Crea tu muñeco</Text>
+              <Text style={styles.munecoText}>Elige su pelo, su cara y sus gafas.</Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={colors.accent} />
+          </Pressable>
+        )}
 
         <View style={styles.ringWrap}>
           <ProgressRing progress={eaten.kcal / m.kcal} size={RING} stroke={16} />
@@ -123,6 +143,19 @@ function Line({ label, value, strong }: { label: string; value: string; strong?:
 }
 
 const styles = StyleSheet.create({
+  munecoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: colors.graphite,
+    borderRadius: 20,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(62,183,255,0.3)',
+    marginBottom: 8,
+  },
+  munecoTitle: { color: colors.chalk, fontFamily: fonts.bodySemi, fontSize: 16 },
+  munecoText: { color: colors.dim, fontFamily: fonts.body, fontSize: 13, marginTop: 2 },
   ringWrap: { alignSelf: 'center', width: RING, height: RING, marginTop: 8 },
   ringCenter: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
   ringValue: { color: colors.chalk, fontFamily: fonts.display, fontSize: 56, lineHeight: 62 },

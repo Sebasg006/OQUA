@@ -3,6 +3,10 @@ import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Avatar from '../components/Avatar';
+import MunecoView from '../components/MunecoView';
+import { useMuneco } from '../lib/muneco';
+import { router } from '../lib/router';
+import { useFocusEffect } from 'expo-router';
 import BackButton from '../components/BackButton';
 import Button from '../components/Button';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
@@ -18,6 +22,8 @@ export default function CuentaScreen() {
   const call = useApi();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const { muneco, saved: munecoSaved, reload: reloadMuneco } = useMuneco(session?.id);
+  useFocusEffect(reloadMuneco);
 
   // Borra la cuenta en el servidor y cierra la sesión (la app vuelve a la bienvenida).
   async function deleteAccount() {
@@ -49,8 +55,11 @@ export default function CuentaScreen() {
         <Text style={shared.title}>Tu cuenta</Text>
 
         <View style={styles.profile}>
-          <Avatar initials={initials(session.name)} size={72} />
+          {munecoSaved ? <MunecoView muneco={muneco} size={96} /> : <Avatar initials={initials(session.name)} size={72} />}
           <Text style={styles.name}>{session.name}</Text>
+          <Pressable onPress={() => router.push('/muneco')} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.munecoLink}>{munecoSaved ? 'Editar mi muñeco' : 'Crear mi muñeco'}</Text>
+          </Pressable>
         </View>
 
         <View style={styles.card}>
@@ -91,6 +100,7 @@ export default function CuentaScreen() {
 }
 
 const styles = StyleSheet.create({
+  munecoLink: { color: colors.accent, fontFamily: fonts.bodySemi, fontSize: 14, marginTop: 6 },
   profile: { alignItems: 'center', marginTop: 4, marginBottom: 20 },
   card: { backgroundColor: colors.graphite, borderRadius: 16, paddingHorizontal: 16 },
   name: { fontFamily: fonts.display, fontSize: 28, lineHeight: 34, color: colors.chalk, marginTop: 12, textAlign: 'center' },

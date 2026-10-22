@@ -72,6 +72,7 @@ function RootNavigator() {
       <Stack.Protected guard={!!session}>
         <Stack.Screen name="perfil" />
         <Stack.Screen name="cuenta" />
+        <Stack.Screen name="muneco" />
       </Stack.Protected>
 
       <Stack.Protected guard={!session}>

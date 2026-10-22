@@ -38,7 +38,15 @@
         }
       ],
       "expo-secure-store",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "OQUA usa la cámara para tus fotos de progreso. Las fotos se guardan solo en tu teléfono.",
+          "photosPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ],
     "extra": {
       "router": {}

@@ -14,6 +14,24 @@ export function metaVasos(weightKg: number) {
 // Los vasos se guardan solo en el teléfono, uno por usuario y por día.
 const keyFor = (userId: string, day: string) => `oqua_agua_${userId}_${day}`;
 
+// Vasos de cada día de un mes (month: 1–12), leídos de una sola vez. Los días sin registro no aparecen.
+export async function aguaDelMes(userId: string, year: number, month: number): Promise<Record<string, number>> {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const days = Array.from({ length: daysInMonth }, (_, i) => `${year}-${pad(month)}-${pad(i + 1)}`);
+  try {
+    const pairs = await AsyncStorage.multiGet(days.map((d) => keyFor(userId, d)));
+    const result: Record<string, number> = {};
+    pairs.forEach(([, value], i) => {
+      const n = value ? Number(value) || 0 : 0;
+      if (n > 0) result[days[i]] = n;
+    });
+    return result;
+  } catch {
+    return {};
+  }
+}
+
 export function useAguaHoy(userId: string) {
   const [day, setDay] = useState(() => localDateOf(new Date().toISOString()));
   const [vasos, setVasos] = useState(0);
