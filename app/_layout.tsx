@@ -64,15 +64,19 @@ function RootNavigator() {
         animation: 'slide_from_right',
       }}
     >
-      {/* Con sesión y datos llenos se llega a las pestañas (abre en Inicio). Sin datos todavía, la primera disponible es "perfil". */}
+      {/* Con sesión y datos llenos se llega a Inicio. Sin datos todavía, la primera disponible es "perfil". */}
       <Stack.Protected guard={!!session && !!profile}>
         <Stack.Screen name="(tabs)" />
       </Stack.Protected>
 
       <Stack.Protected guard={!!session}>
         <Stack.Screen name="perfil" />
-        <Stack.Screen name="cuenta" />
         <Stack.Screen name="muneco" />
+        <Stack.Screen name="comida" />
+        <Stack.Screen name="porcion" />
+        <Stack.Screen name="comida-manual" />
+        <Stack.Screen name="escanear" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="producto-nuevo" />
       </Stack.Protected>
 
       <Stack.Protected guard={!session}>

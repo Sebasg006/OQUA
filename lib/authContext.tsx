@@ -17,7 +17,8 @@ type AuthContextValue = {
   token: string | null;
   loading: boolean; // true mientras se restaura la sesión guardada al abrir la app
   login: (email: string, password: string) => Promise<void>;
-  signup: (data: { name: string; email: string; password: string }) => Promise<void>;
+  // coachCode: código del entrenador (ya revisado y con el permiso aceptado en la pantalla de registro).
+  signup: (data: { name: string; email: string; password: string }, coachCode?: string) => Promise<void>;
   saveProfile: (profile: Profile) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -69,8 +70,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await finish(await api<AuthResponse>('/nutricion/login', { body: { email, password } }));
   }
 
-  async function signup(data: { name: string; email: string; password: string }) {
-    await finish(await api<AuthResponse>('/nutricion/register', { body: data }));
+  async function signup(data: { name: string; email: string; password: string }, coachCode?: string) {
+    const res = await api<AuthResponse>('/nutricion/register', { body: data });
+    // La conexión se pide antes de entrar a la app. Si falla, la cuenta queda creada igual
+    // y el código se puede poner después en Tu cuenta.
+    if (coachCode) {
+      await api('/nutricion/entrenador', { body: { code: coachCode, consent: true }, token: res.token }).catch((e) =>
+        console.warn('No se pudo conectar con el entrenador:', (e as Error).message),
+      );
+    }
+    await finish(res);
   }
 
   async function saveProfile(next: Profile) {

@@ -1,7 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import { MAX_VASOS, ML_POR_VASO, metaVasos, useAguaHoy } from '../lib/agua';
+import { MAX_VASOS, ML_POR_VASO, metaVasos, useAgua } from '../lib/agua';
 import { miles } from '../lib/format';
 import { colors, fonts } from '../lib/theme';
 
@@ -21,8 +21,9 @@ function Glass({ full }: { full: boolean }) {
 }
 
 // Tarjeta de agua del día: vasos tomados contra la meta, con botón para sumar uno y otro para corregir.
-export default function WaterCard({ userId, weightKg }: { userId: string; weightKg: number }) {
-  const { vasos, agregar, quitar } = useAguaHoy(userId);
+// El conteo (useAguaHoy) lo lleva Inicio, que también lo necesita para la racha.
+export default function WaterCard({ agua, weightKg }: { agua: ReturnType<typeof useAgua>; weightKg: number }) {
+  const { vasos, agregar, quitar } = agua;
   const meta = metaVasos(weightKg);
   const done = vasos >= meta;
   const extra = vasos - meta;

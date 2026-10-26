@@ -24,7 +24,7 @@ export default function HeaderEyebrow({ text, icon }: { text: string; icon?: Com
         {icon && <Feather name={icon} size={13} color={colors.accent} />}
         <Text style={[shared.eyebrow, { marginBottom: 0 }, icon && { color: colors.accent }]}>{text}</Text>
       </View>
-      <Pressable onPress={() => router.push('/cuenta')} hitSlop={8} accessibilityLabel="Tu cuenta">
+      <Pressable onPress={() => router.navigate('/cuenta')} hitSlop={8} accessibilityLabel="Tu perfil">
         {saved ? <MunecoView muneco={muneco} size={36} /> : <Avatar initials={initials(session?.name ?? '')} size={32} />}
       </Pressable>
     </View>

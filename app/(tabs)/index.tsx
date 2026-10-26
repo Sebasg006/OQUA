@@ -1,11 +1,19 @@
 import Feather from '@expo/vector-icons/Feather';
 import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Glow from '../../components/Glow';
 import HeaderEyebrow from '../../components/HeaderEyebrow';
 import ProgressRing from '../../components/ProgressRing';
+import MealsCard from '../../components/MealsCard';
+import StreakBanner from '../../components/StreakBanner';
+import StreakCard from '../../components/StreakCard';
 import WaterCard from '../../components/WaterCard';
+import WeekStrip from '../../components/WeekStrip';
+import { metaVasos, useAgua } from '../../lib/agua';
+import { hoy, useComidasDia } from '../../lib/comidas';
+import { useRacha } from '../../lib/racha';
 import MunecoView from '../../components/MunecoView';
 import { useMuneco } from '../../lib/muneco';
 import { useTabBarClearance } from '../../components/FloatingTabBar';
@@ -18,26 +26,78 @@ import { colors, fonts } from '../../lib/theme';
 
 const RING = 220;
 
-// Hoy: cuánto queda del día. Por ahora no se anotan comidas (siguiente paso), así que lo comido es 0.
+// La notificación de la racha baja sola una vez por día al abrir Inicio (no cada vez que se vuelve a la pantalla).
+let bannerShownOn: string | null = null;
+
+// Inicio: la única pantalla principal. Arriba la semana: hoy por defecto; tocar un día anterior muestra lo que se
+// comió y el agua de ese día, y deja anotar lo que se olvidó.
 export default function HoyScreen() {
   const { session, profile } = useAuth();
-  const tabBarClearance = useTabBarClearance();
+  const clearance = useTabBarClearance();
   const { muneco, saved: munecoSaved, loaded: munecoLoaded, reload: reloadMuneco } = useMuneco(session?.id);
   useFocusEffect(reloadMuneco);
+  const today = hoy();
+  const [selected, setSelected] = useState(today);
+  const day = selected > today ? today : selected; // si la app quedó abierta de un día para otro
+  const isToday = day === today;
+  const userId = session?.id ?? '';
+  // Lo de hoy siempre se carga (la racha lo necesita); lo de otro día, solo si se está viendo otro día.
+  const comidasHoy = useComidasDia(today);
+  const comidasOtro = useComidasDia(isToday ? null : day);
+  const aguaHoy = useAgua(userId, today);
+  const aguaOtro = useAgua(userId, isToday ? null : day);
+  const comidas = isToday ? comidasHoy : comidasOtro;
+  const agua = isToday ? aguaHoy : aguaOtro;
+  const vasosMeta = profile ? metaVasos(profile.weight_kg) : Infinity;
+  const hoyCumplido = comidasHoy.meals.length > 0 || aguaHoy.vasos >= vasosMeta;
+  const otroCumple = comidasOtro.meals.length > 0 || aguaOtro.vasos >= vasosMeta;
+  const racha = useRacha(
+    session?.id,
+    profile?.weight_kg,
+    hoyCumplido,
+    !isToday && comidasOtro.loaded ? { day, cumple: otroCumple } : undefined,
+  );
+  const [bannerOpen, setBannerOpen] = useState(false);
+  const closeBanner = useCallback(() => setBannerOpen(false), []);
+  const rachaReady = !!racha && comidasHoy.loaded;
+
+  // Baja una vez al día cuando ya se sabe la racha, y otra vez cuando hoy empieza a contar (la celebración).
+  const prevCumplido = useRef(hoyCumplido);
+  useEffect(() => {
+    if (!rachaReady) return;
+    const today = hoy();
+    if (bannerShownOn !== today || (hoyCumplido && !prevCumplido.current)) {
+      bannerShownOn = today;
+      setBannerOpen(true);
+    }
+    prevCumplido.current = hoyCumplido;
+  }, [rachaReady, hoyCumplido]);
+
   if (!profile) return null;
   const m = meta(profile);
-  const eaten = { kcal: 0, proteina: 0, carbos: 0, grasa: 0 };
+  const eaten = comidas.totals;
   const left = m.kcal - eaten.kcal;
   const firstName = session?.name.split(' ')[0] ?? '';
 
   return (
     <SafeAreaView style={shared.screen}>
       <Glow />
-      <ScrollView contentContainerStyle={[shared.scrollContent, { paddingBottom: tabBarClearance }]}>
-        <HeaderEyebrow text={todayLabel()} />
-        <Text style={shared.title}>
-          Hola, <Text style={{ color: colors.accent }}>{firstName}</Text>
-        </Text>
+      <ScrollView contentContainerStyle={[shared.scrollContent, { paddingBottom: clearance }]}>
+        <HeaderEyebrow text={todayLabel(new Date(`${day}T12:00:00`))} />
+        <View style={styles.titleRow}>
+          <Text style={[shared.title, styles.title]} numberOfLines={1}>
+            Hola, <Text style={{ color: colors.accent }}>{firstName}</Text>
+          </Text>
+          {racha && <StreakCard dias={racha.dias} hoyCumplido={racha.hoyCumplido} onPress={() => setBannerOpen(true)} />}
+        </View>
+
+        <WeekStrip today={today} selected={day} onSelect={setSelected} cuenta={racha?.cuenta ?? (() => false)} />
+        {!isToday && (
+          <Pressable onPress={() => setSelected(today)} style={styles.backToday} hitSlop={6} accessibilityRole="button">
+            <Feather name="corner-up-left" size={14} color={colors.accent} />
+            <Text style={styles.backTodayText}>Volver a hoy</Text>
+          </Pressable>
+        )}
 
         {munecoLoaded && !munecoSaved && (
           <Pressable
@@ -58,7 +118,7 @@ export default function HoyScreen() {
           <ProgressRing progress={eaten.kcal / m.kcal} size={RING} stroke={16} />
           <View style={styles.ringCenter} pointerEvents="none">
             <Text style={styles.ringValue}>{miles(Math.max(0, left))}</Text>
-            <Text style={styles.ringLabel}>kcal te quedan</Text>
+            <Text style={styles.ringLabel}>{isToday ? 'kcal te quedan' : 'kcal te quedaron'}</Text>
           </View>
         </View>
 
@@ -68,7 +128,9 @@ export default function HoyScreen() {
           <Total label="Comido" value={miles(eaten.kcal)} />
         </View>
 
-        {session && <WaterCard userId={session.id} weightKg={profile.weight_kg} />}
+        <MealsCard day={day} isToday={isToday} meals={comidas.meals} loaded={comidas.loaded} error={comidas.error} onRemove={comidas.remove} />
+
+        {session && <WaterCard agua={agua} weightKg={profile.weight_kg} />}
 
         <View style={styles.card}>
           <Macro label="Proteína" eaten={eaten.proteina} goal={m.proteina} />
@@ -103,6 +165,7 @@ export default function HoyScreen() {
 
         <Text style={styles.disclaimer}>Es una estimación con fórmulas de uso general. No reemplaza la consulta con un nutricionista o médico.</Text>
       </ScrollView>
+      {racha && <StreakBanner open={bannerOpen} dias={racha.dias} hoyCumplido={racha.hoyCumplido} onClose={closeBanner} />}
     </SafeAreaView>
   );
 }
@@ -123,7 +186,7 @@ function Macro({ label, eaten, goal, last }: { label: string; eaten: number; goa
       <View style={styles.macroHead}>
         <Text style={styles.macroLabel}>{label}</Text>
         <Text style={styles.macroValue}>
-          {eaten} <Text style={{ color: colors.dim }}>/ {goal} g</Text>
+          {Math.round(eaten)} <Text style={{ color: colors.dim }}>/ {goal} g</Text>
         </Text>
       </View>
       <View style={styles.track}>
@@ -143,6 +206,10 @@ function Line({ label, value, strong }: { label: string; value: string; strong?:
 }
 
 const styles = StyleSheet.create({
+  backToday: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center', minHeight: 36, marginBottom: 4 },
+  backTodayText: { color: colors.accent, fontFamily: fonts.bodySemi, fontSize: 13 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  title: { flex: 1, marginBottom: 0 },
   munecoCard: {
     flexDirection: 'row',
     alignItems: 'center',

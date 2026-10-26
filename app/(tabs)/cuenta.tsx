@@ -2,24 +2,26 @@ import Feather from '@expo/vector-icons/Feather';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Avatar from '../components/Avatar';
-import MunecoView from '../components/MunecoView';
-import { useMuneco } from '../lib/muneco';
-import { router } from '../lib/router';
+import Avatar from '../../components/Avatar';
+import MunecoView from '../../components/MunecoView';
+import { useMuneco } from '../../lib/muneco';
+import { router } from '../../lib/router';
 import { useFocusEffect } from 'expo-router';
-import BackButton from '../components/BackButton';
-import Button from '../components/Button';
-import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
-import { useAuth } from '../lib/authContext';
-import { initials } from '../lib/format';
-import { shared } from '../lib/sharedStyles';
-import { colors, fonts } from '../lib/theme';
-import { useApi } from '../lib/useApi';
-import FormScrollView from '../components/FormScrollView';
+import { useTabBarClearance } from '../../components/FloatingTabBar';
+import Button from '../../components/Button';
+import CoachSection from '../../components/CoachSection';
+import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
+import { useAuth } from '../../lib/authContext';
+import { initials } from '../../lib/format';
+import { shared } from '../../lib/sharedStyles';
+import { colors, fonts } from '../../lib/theme';
+import { useApi } from '../../lib/useApi';
+import FormScrollView from '../../components/FormScrollView';
 
 export default function CuentaScreen() {
   const { session, logout } = useAuth();
   const call = useApi();
+  const clearance = useTabBarClearance();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { muneco, saved: munecoSaved, reload: reloadMuneco } = useMuneco(session?.id);
@@ -50,9 +52,8 @@ export default function CuentaScreen() {
 
   return (
     <SafeAreaView style={shared.screen}>
-      <FormScrollView contentContainerStyle={shared.scrollContent}>
-        <BackButton />
-        <Text style={shared.title}>Tu cuenta</Text>
+      <FormScrollView contentContainerStyle={[shared.scrollContent, { paddingBottom: clearance }]}>
+        <Text style={shared.title}>Perfil</Text>
 
         <View style={styles.profile}>
           {munecoSaved ? <MunecoView muneco={muneco} size={96} /> : <Avatar initials={initials(session.name)} size={72} />}
@@ -73,6 +74,18 @@ export default function CuentaScreen() {
           </View>
         </View>
 
+        <Pressable
+          style={({ pressed }) => [styles.optionRow, { marginTop: 12 }, pressed && { opacity: 0.75 }]}
+          onPress={() => router.push('/perfil')}
+          accessibilityRole="button"
+        >
+          <Feather name="sliders" size={18} color={colors.dim} />
+          <Text style={styles.optionText}>Tus datos y tu meta</Text>
+          <Feather name="chevron-right" size={18} color={colors.dim} />
+        </Pressable>
+
+        <CoachSection />
+
         <Text style={shared.sectionTitle}>Seguridad</Text>
         <Pressable
           style={({ pressed }) => [styles.optionRow, pressed && { opacity: 0.75 }]}
@@ -84,7 +97,7 @@ export default function CuentaScreen() {
           <Feather name="chevron-right" size={18} color={colors.red} />
         </Pressable>
 
-        <Button label="Cerrar sesión" icon="log-out" variant="danger" onPress={confirmLogout} style={{ marginTop: 32, marginBottom: 24 }} />
+        <Button label="Cerrar sesión" icon="log-out" variant="danger" onPress={confirmLogout} style={{ marginTop: 32 }} />
       </FormScrollView>
       <ConfirmDeleteModal
         visible={confirmDelete}

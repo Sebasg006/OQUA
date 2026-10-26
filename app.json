@@ -42,9 +42,17 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "OQUA usa la cámara para tus fotos de progreso. Las fotos se guardan solo en tu teléfono.",
+          "cameraPermission": "OQUA usa la cámara para leer el código de barras de tus alimentos.",
           "photosPermission": false,
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "OQUA usa la cámara para leer el código de barras de tus alimentos.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ]
     ],

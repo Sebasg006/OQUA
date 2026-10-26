@@ -10,6 +10,7 @@ import { useAuth } from '../lib/authContext';
 import { authStyles } from '../lib/authStyles';
 import { shared } from '../lib/sharedStyles';
 import FormScrollView from '../components/FormScrollView';
+import { useCoachCode } from '../components/CoachCode';
 
 export default function SignupScreen() {
   const { signup } = useAuth();
@@ -18,6 +19,7 @@ export default function SignupScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const coach = useCoachCode();
   // "siguiente" pasa a la próxima casilla; subir la pantalla con el teclado lo hace FormScrollView.
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
@@ -31,10 +33,14 @@ export default function SignupScreen() {
       setError('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
+    if (coach.blocker) {
+      setError(coach.blocker);
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
-      await signup({ name: name.trim(), email: email.trim(), password });
+      await signup({ name: name.trim(), email: email.trim(), password }, coach.code || undefined);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -82,8 +88,9 @@ export default function SignupScreen() {
               value={password}
               onChangeText={setPassword}
               returnKeyType="done"
-              onSubmitEditing={handleSubmit}
             />
+
+            {coach.element}
 
             {error && <Text style={authStyles.error}>{error}</Text>}
 

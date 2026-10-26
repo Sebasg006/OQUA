@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import FloatingTabBar from '../../components/FloatingTabBar';
 import { colors } from '../../lib/theme';
 
-// Barra de abajo como en el Figma de OQUA: Calendario, Inicio y Cámara. La app abre en Inicio.
+// Barra de abajo: Inicio (lo del día) y Perfil (muñeco, datos, entrenador y cuenta). La app abre en Inicio.
 export default function TabsLayout() {
   return (
     <Tabs
@@ -17,13 +17,6 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="calendario"
-        options={{
-          title: 'Calendario',
-          tabBarIcon: ({ color, size }) => <Feather name="calendar" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="index"
         options={{
           title: 'Inicio',
@@ -31,10 +24,10 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="camara"
+        name="cuenta"
         options={{
-          title: 'Cámara',
-          tabBarIcon: ({ color, size }) => <Feather name="camera" size={size} color={color} />,
+          title: 'Perfil',
+          tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} />,
         }}
       />
     </Tabs>
