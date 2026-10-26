@@ -4,9 +4,13 @@ import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Keyboard, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Feather from '@expo/vector-icons/Feather';
 import { colors, fonts } from '../lib/theme';
 
-type TabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>['tabBar']>>[0];
+type TabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>['tabBar']>>[0] & {
+  // Botón redondo en el centro de la barra (no es una pestaña): la acción principal de la app.
+  centerAction?: { label: string; onPress: (focusedRoute: string) => void };
+};
 
 const BAR_HEIGHT = 64;
 const SIDE = 16;
@@ -22,14 +26,18 @@ export function useTabBarClearance() {
 }
 
 // Barra de pestañas flotante en forma de píldora, con un indicador que se desliza a la pestaña activa.
-export default function FloatingTabBar({ state, descriptors, navigation, insets }: TabBarProps) {
+export default function FloatingTabBar({ state, descriptors, navigation, insets, centerAction }: TabBarProps) {
   const [width, setWidth] = useState(0);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const position = useRef(new Animated.Value(state.index)).current;
-  const itemWidth = width / state.routes.length;
+  // Con botón central, las pestañas de la segunda mitad corren un puesto a la derecha.
+  const mid = Math.ceil(state.routes.length / 2);
+  const slotOf = (index: number) => (centerAction && index >= mid ? index + 1 : index);
+  const position = useRef(new Animated.Value(slotOf(state.index))).current;
+  const itemWidth = width / (state.routes.length + (centerAction ? 1 : 0));
 
   useEffect(() => {
-    Animated.spring(position, { toValue: state.index, useNativeDriver: true, damping: 18, stiffness: 200, mass: 0.8 }).start();
+    Animated.spring(position, { toValue: slotOf(state.index), useNativeDriver: true, damping: 18, stiffness: 200, mass: 0.8 }).start();
+    // slotOf solo depende de la cantidad de pestañas y del botón central, que no cambian.
   }, [state.index, position]);
 
   // Con el teclado abierto la barra se esconde, para no tapar los campos de texto.
@@ -61,7 +69,7 @@ export default function FloatingTabBar({ state, descriptors, navigation, insets 
         />
       )}
 
-      {state.routes.map((route, index) => {
+      {state.routes.flatMap((route, index) => {
         const { options } = descriptors[route.key];
         const focused = state.index === index;
         const color = focused ? colors.accent : colors.dim;
@@ -72,7 +80,7 @@ export default function FloatingTabBar({ state, descriptors, navigation, insets 
           if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
         }
 
-        return (
+        const tab = (
           <TabItem key={route.key} label={label} focused={focused} onPress={onPress}>
             {options.tabBarIcon?.({ focused, color, size: 22 })}
             {/* La barra tiene alto fijo: la letra grande del teléfono se respeta hasta 1,2× para que no se corte. */}
@@ -81,6 +89,8 @@ export default function FloatingTabBar({ state, descriptors, navigation, insets 
             </Text>
           </TabItem>
         );
+        if (!centerAction || index !== mid - 1) return [tab];
+        return [tab, <CenterButton key="center" label={centerAction.label} onPress={() => centerAction.onPress(state.routes[state.index].name)} />];
       })}
     </View>
   );
@@ -102,6 +112,28 @@ function TabItem({ label, focused, onPress, children }: { label: string; focused
     >
       <Animated.View style={[styles.itemInner, { transform: [{ scale }] }]}>{children}</Animated.View>
     </Pressable>
+  );
+}
+
+// Botón de la acción principal: círculo azul con "+", un poco más grande que las pestañas y levantado sobre la barra.
+function CenterButton({ label, onPress }: { label: string; onPress: () => void }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const to = (v: number) => Animated.spring(scale, { toValue: v, useNativeDriver: true, speed: 40, bounciness: 8 }).start();
+  return (
+    <View style={styles.item}>
+      <Pressable
+        style={styles.centerHit}
+        onPress={onPress}
+        onPressIn={() => to(0.9)}
+        onPressOut={() => to(1)}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+      >
+        <Animated.View style={[styles.center, { transform: [{ scale }] }]}>
+          <Feather name="plus" size={28} color={colors.accentInk} />
+        </Animated.View>
+      </Pressable>
+    </View>
   );
 }
 
@@ -137,6 +169,23 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(62,183,255,0.28)',
   },
   item: { flex: 1 },
+  centerHit: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  center: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    marginTop: -22,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: colors.ink,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 10,
+  },
   itemInner: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3 },
   label: { fontSize: 11, fontFamily: fonts.body },
   labelActive: { fontFamily: fonts.bodySemi },

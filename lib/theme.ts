@@ -16,13 +16,15 @@ export const colors = {
 } as const;
 
 export const fonts = {
-  display: 'BigShouldersDisplay_800ExtraBold',
-  displayBold: 'BigShouldersDisplay_700Bold',
-  displaySemi: 'BigShouldersDisplay_600SemiBold',
-  body: 'Inter_400Regular',
-  bodyMedium: 'Inter_500Medium',
-  bodySemi: 'Inter_600SemiBold',
-  // Cifras. Antes era IBM Plex Mono (letra de máquina); se cambió a Inter para que la app no se vea tan técnica.
-  mono: 'Inter_500Medium',
+  // Letras propias de OQUA (2026-10-25): antes eran las de Coatrack (Big Shoulders + Inter). Fredoka es redonda
+  // y gruesa como la mascota; Figtree es limpia como Inter pero menos vista. Las dos de Google Fonts (OFL).
+  display: 'Fredoka_600SemiBold',
+  displayBold: 'Fredoka_700Bold',
+  displaySemi: 'Fredoka_500Medium',
+  body: 'Figtree_400Regular',
+  bodyMedium: 'Figtree_500Medium',
+  bodySemi: 'Figtree_600SemiBold',
+  // Cifras.
+  mono: 'Figtree_500Medium',
 } as const;
 

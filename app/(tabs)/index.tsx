@@ -14,6 +14,7 @@ import WeekStrip from '../../components/WeekStrip';
 import { metaVasos, useAgua } from '../../lib/agua';
 import { hoy, useComidasDia } from '../../lib/comidas';
 import { useRacha } from '../../lib/racha';
+import { setDiaElegido } from '../../lib/diaElegido';
 import MunecoView from '../../components/MunecoView';
 import { useMuneco } from '../../lib/muneco';
 import { useTabBarClearance } from '../../components/FloatingTabBar';
@@ -39,6 +40,8 @@ export default function HoyScreen() {
   const today = hoy();
   const [selected, setSelected] = useState(today);
   const day = selected > today ? today : selected; // si la app quedó abierta de un día para otro
+  // El "+" de la barra anota en el día que se está viendo aquí.
+  useEffect(() => setDiaElegido(day === today ? null : day), [day, today]);
   const isToday = day === today;
   const userId = session?.id ?? '';
   // Lo de hoy siempre se carga (la racha lo necesita); lo de otro día, solo si se está viendo otro día.
